@@ -61,13 +61,6 @@ func max(a, b int) int {
 	return b
 }
 
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
 // Reset allows reuse of a previous allocated `*BytesReplacingReader` for buf allocation optimization.
 // `search` cannot be nil/empty. `replace` can.
 func (r *BytesReplacingReader) Reset(r1 io.Reader, search1, replace1 []byte) *BytesReplacingReader {
