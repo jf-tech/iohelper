@@ -49,6 +49,7 @@ type BytesReplacingReader struct {
 const defaultBufSize = int(4096)
 
 // NewBytesReplacingReader creates a new `*BytesReplacingReader`.
+// `search` cannot be nil/empty. `replace` can.
 func NewBytesReplacingReader(r io.Reader, search, replace []byte) *BytesReplacingReader {
 	return (&BytesReplacingReader{}).Reset(r, search, replace)
 }
@@ -68,6 +69,7 @@ func min(a, b int) int {
 }
 
 // Reset allows reuse of a previous allocated `*BytesReplacingReader` for buf allocation optimization.
+// `search` cannot be nil/empty. `replace` can.
 func (r *BytesReplacingReader) Reset(r1 io.Reader, search1, replace1 []byte) *BytesReplacingReader {
 	if r1 == nil {
 		panic("io.Reader cannot be nil")
@@ -76,7 +78,7 @@ func (r *BytesReplacingReader) Reset(r1 io.Reader, search1, replace1 []byte) *By
 		panic("search token cannot be nil/empty")
 	}
 	if len(replace1) == 0 {
-		panic("replace token cannot be nil/empty")
+		replace1 = []byte{}
 	}
 	r.r = r1
 	r.search = search1
@@ -86,12 +88,19 @@ func (r *BytesReplacingReader) Reset(r1 io.Reader, search1, replace1 []byte) *By
 	r.lenDelta = r.replaceLen - r.searchLen // could be negative
 	r.err = nil
 	bufSize := max(defaultBufSize, max(r.searchLen, r.replaceLen))
-	if r.buf == nil || cap(r.buf) < bufSize {
+	if r.buf == nil || len(r.buf) < bufSize {
 		r.buf = make([]byte, bufSize)
 	}
 	r.buf0 = 0
 	r.buf1 = 0
-	r.max = min(cap(r.buf), (cap(r.buf)/r.replaceLen)*r.searchLen)
+	r.max = len(r.buf)
+	if r.searchLen < r.replaceLen {
+		// If len(search) < len(replace), then we have to assume the worst case:
+		// what's the max bound value such that if we have consecutive 'search' filling up
+		// the buf up to buf[:max], and all of them are placed with 'replace', and the final
+		// result won't end up exceed the len(buf)?
+		r.max = (len(r.buf) / r.replaceLen) * r.searchLen
+	}
 	return r
 }
 

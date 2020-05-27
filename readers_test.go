@@ -56,6 +56,13 @@ func TestBytesReplacingReader(t *testing.T) {
 			expected: []byte{1, 9, 2, 3, 4, 5, 6, 7, 8},
 		},
 		{
+			name:     "strip out search, no replace",
+			input:    []byte{1, 2, 3, 2, 2, 3, 4, 2, 3, 2, 8},
+			search:   []byte{2, 3, 2},
+			replace:  []byte{},
+			expected: []byte{1, 2, 3, 4, 8},
+		},
+		{
 			name:     "len(replace) == len(search)",
 			input:    []byte{1, 2, 3, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5},
 			search:   []byte{5, 5},
@@ -84,9 +91,6 @@ func TestBytesReplacingReader(t *testing.T) {
 	})
 	assert.PanicsWithValue(t, "search token cannot be nil/empty", func() {
 		(&BytesReplacingReader{}).Reset(strings.NewReader("test"), nil, []byte("est"))
-	})
-	assert.PanicsWithValue(t, "replace token cannot be nil/empty", func() {
-		NewBytesReplacingReader(strings.NewReader("test"), []byte("est"), nil)
 	})
 }
 
@@ -151,7 +155,7 @@ func BenchmarkBytesReplacingReader_50KBLength_1000Targets(b *testing.B) {
 	}
 }
 
-func BenchmarkRegularReader_50KBLength_100Targets(b *testing.B) {
+func BenchmarkRegularReader_50KBLength_1000Targets(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		_, _ = ioutil.ReadAll(bytes.NewReader(testInput50KBLength1000Targets))
 	}
