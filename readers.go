@@ -77,9 +77,6 @@ func (r *BytesReplacingReader) Reset(r1 io.Reader, search1, replace1 []byte) *By
 	if len(search1) == 0 {
 		panic("search token cannot be nil/empty")
 	}
-	if len(replace1) == 0 {
-		replace1 = []byte{}
-	}
 	r.r = r1
 	r.search = search1
 	r.searchLen = len(search1)
