@@ -11,13 +11,13 @@ type ScannerByDelimFlag uint
 const (
 	// ScannerByDelimFlagEofAsDelim specifies that the scanner should treat EOF as the delimiter as well.
 	ScannerByDelimFlagEofAsDelim ScannerByDelimFlag = 1 << iota
-	// ScannerByDelimFlagDropDelimInReturn specifies that the delimiter should be included in the return value.
+	// ScannerByDelimFlagDropDelimInReturn specifies that the delimiter should NOT be included in the return value.
 	ScannerByDelimFlagDropDelimInReturn
 	scannerByDelimFlagEnd
 
 	// ScannerByDelimFlagEofNotAsDelim specifies that the scanner should NOT treat EOF as the delimiter.
 	ScannerByDelimFlagEofNotAsDelim = 0
-	// ScannerByDelimFlagIncludeDelimInReturn specifies that the delimiter should NOT be included in the return value.
+	// ScannerByDelimFlagIncludeDelimInReturn specifies that the delimiter should be included in the return value.
 	ScannerByDelimFlagIncludeDelimInReturn = 0
 )
 const (
