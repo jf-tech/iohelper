@@ -1,7 +1,9 @@
 package iohelper
 
 import (
+	"bufio"
 	"bytes"
+	"errors"
 	"io"
 	"io/ioutil"
 	"math/rand"
@@ -159,4 +161,117 @@ func BenchmarkRegularReader_50KBLength_1000Targets(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		_, _ = ioutil.ReadAll(bytes.NewReader(testInput50KBLength1000Targets))
 	}
+}
+
+func TestReadLine(t *testing.T) {
+	for _, test := range []struct {
+		name           string
+		input          string
+		bufsize        int
+		expectedOutput []string
+	}{
+		{
+			name:           "empty",
+			input:          "",
+			bufsize:        1024,
+			expectedOutput: []string{},
+		},
+		{
+			name:           "single-line with no newline",
+			input:          "   word1, word2 - word3 !@#$%^&*()",
+			bufsize:        1024,
+			expectedOutput: []string{"   word1, word2 - word3 !@#$%^&*()"},
+		},
+		{
+			name:           "single-line with '\\r' and '\\n'",
+			input:          "line1\r\n",
+			bufsize:        1024,
+			expectedOutput: []string{"line1"},
+		},
+		{
+			name:           "multi-line - bufsize enough",
+			input:          "line1\r\nline2\nline3",
+			bufsize:        1024,
+			expectedOutput: []string{"line1", "line2", "line3"},
+		},
+		{
+			name:           "multi-line - bufsize not enough; also empty line",
+			input:          "line1-0123456789012345\r\n\nline3-0123456789012345",
+			bufsize:        16, // bufio.minReadBufferSize is 16.
+			expectedOutput: []string{"line1-0123456789012345", "", "line3-0123456789012345"},
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			r := bufio.NewReaderSize(strings.NewReader(test.input), test.bufsize)
+			output := []string{}
+			for {
+				line, err := ReadLine(r)
+				if err != nil {
+					assert.Equal(t, "", line)
+					assert.Equal(t, io.EOF, err)
+					break
+				}
+				output = append(output, line)
+			}
+			assert.Equal(t, test.expectedOutput, output)
+		})
+	}
+}
+
+func TestStripBOM_Success(t *testing.T) {
+	for _, test := range []struct {
+		name            string
+		fileContent     []byte
+		expectedContent []byte
+	}{
+		{
+			name:            "Empty content",
+			fileContent:     []byte(""),
+			expectedContent: []byte(""),
+		},
+		{
+			name:            "Non-bom unicode",
+			fileContent:     []byte("\u1234test content"),
+			expectedContent: []byte("\u1234test content"),
+		},
+		{
+			name:            "Content without BOM",
+			fileContent:     []byte("test content"),
+			expectedContent: []byte("test content"),
+		},
+		{
+			name:            "Content with BOM",
+			fileContent:     []byte("\uFEFFtest content"),
+			expectedContent: []byte("test content"),
+		},
+		{
+			name:            "Content with BOM only",
+			fileContent:     []byte("\uFEFF"),
+			expectedContent: []byte(""),
+		},
+	} {
+		r := bytes.NewReader(test.fileContent)
+		br, err := StripBOM(r)
+		assert.NoError(t, err)
+		assert.False(t, br == nil)
+		line, _, err := br.(*bufio.Reader).ReadLine()
+		if len(test.expectedContent) <= 0 {
+			assert.Error(t, err)
+			assert.Equal(t, io.EOF, err)
+			continue
+		}
+		assert.NoError(t, err)
+		assert.Equal(t, test.expectedContent, line)
+	}
+}
+
+type failureReader struct{}
+
+func (r *failureReader) Read([]byte) (int, error) { return 0, errors.New("test failure") }
+
+func TestStripBOM_ReadFailure(t *testing.T) {
+	br, err := StripBOM(&failureReader{})
+	assert.True(t, br == nil)
+	assert.Error(t, err)
+	assert.Equal(t, "test failure", err.Error())
 }
