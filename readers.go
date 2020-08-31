@@ -1,6 +1,7 @@
 package iohelper
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/csv"
 	"fmt"
@@ -130,5 +131,64 @@ func (r *BytesReplacingReader) Read(p []byte) (int, error) {
 		if r.err != nil {
 			r.buf0 = r.buf1
 		}
+	}
+}
+
+// ReadLine reads in a single line from a bufio.Reader.
+func ReadLine(r *bufio.Reader) (string, error) {
+	// Turns out even with various bufio.Reader.Read???() and bufio.Scanner, there is not simple clean
+	// way of reading a single text line in:
+	// - bufio.ReadSlice('\n') doesn't have '\r' dropping. We want a line returned without neither '\n' nor '\r'.
+	// - bufio.ReadLine() drops '\r' and '\n', but has a fixed buf so may be unable to read a whole line in one call.
+	// - bufio.ReadBytes no buf size issue, but doesn't offer '\r' and '\n' cleanup.
+	// - bufio.ReadString essentially the same as bufio.ReadBytes.
+	// - bufio.Scanner deals with '\r' and '\n' but has fixed buf issue.
+	// Oh, come on!!
+	//
+	// Also found net/textproto's Reader.ReadLine() which meets all the requirements. But to use it
+	// we need to create yet another type of Reader (net.textproto.Reader), as if the
+	// io.Reader -> bufio.Reader isn't enough for us. So decided instead, just shamelessly copy
+	// net.textproto.Reader.ReadLine() here, credit goes to
+	// https://github.com/golang/go/blob/master/src/net/textproto/reader.go. However its test code
+	// coverage is lacking, so create all the new test cases for this ReadLine implementation copy.
+	var line []byte
+	for {
+		l, more, err := r.ReadLine()
+		if err != nil {
+			return "", err
+		}
+		// Avoid the copy if the first call produced a full line.
+		if line == nil && !more {
+			return string(l), nil
+		}
+		line = append(line, l...)
+		if !more {
+			break
+		}
+	}
+	return string(line), nil
+}
+
+const bom = '\uFEFF'
+
+// StripBOM returns a new io.Reader that, if needed, strips away the BOM (byte order marker) of
+// the input io.Reader.
+func StripBOM(reader io.Reader) (io.Reader, error) {
+	br := bufio.NewReader(reader)
+	r, _, err := br.ReadRune()
+	switch {
+	case err == io.EOF:
+		// This is to handle empty file, can't call UnreadRune(), will meet ErrInvalidUnreadRune as
+		// b.lastRuneSize is -1. So simply reset buffer io.
+		br.Reset(reader)
+		return br, nil
+	case err != nil:
+		return nil, err
+	case r == bom:
+		return br, nil
+	default:
+		// Here we shouldn't meet any error during unread rune.
+		_ = br.UnreadRune()
+		return br, nil
 	}
 }
