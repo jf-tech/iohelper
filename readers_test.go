@@ -280,9 +280,8 @@ func (r *failureReader) Read(p []byte) (int, error) {
 	}
 	if r.err != "" {
 		return length, errors.New(r.err)
-	} else {
-		return length, errors.New("test failure")
 	}
+	return length, errors.New("test failure")
 }
 
 func TestStripBOM_ReadFailure(t *testing.T) {
