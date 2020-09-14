@@ -265,13 +265,74 @@ func TestStripBOM_Success(t *testing.T) {
 	}
 }
 
-type failureReader struct{}
+type failureReader struct {
+	bytesToReturn []byte
+	err           string
+}
 
-func (r *failureReader) Read([]byte) (int, error) { return 0, errors.New("test failure") }
+func (r *failureReader) Read(p []byte) (int, error) {
+	length := len(r.bytesToReturn)
+	if length > len(p) {
+		length = len(p)
+	}
+	if length > 0 {
+		copy(p, r.bytesToReturn)
+	}
+	if r.err != "" {
+		return length, errors.New(r.err)
+	} else {
+		return length, errors.New("test failure")
+	}
+}
 
 func TestStripBOM_ReadFailure(t *testing.T) {
 	br, err := StripBOM(&failureReader{})
 	assert.True(t, br == nil)
 	assert.Error(t, err)
 	assert.Equal(t, "test failure", err.Error())
+}
+
+func TestLineCountingReader(t *testing.T) {
+	for _, test := range []struct {
+		name           string
+		input          io.Reader
+		expectedErr    string
+		expectedBytes  []byte
+		expectedAtLine int
+	}{
+		{
+			name:           "success - one line",
+			input:          strings.NewReader("abc efg"),
+			expectedErr:    "",
+			expectedBytes:  []byte("abc efg"),
+			expectedAtLine: 1,
+		},
+		{
+			name:           "success - multiple lines",
+			input:          strings.NewReader("abc\nefg\r\n123\n"),
+			expectedErr:    "",
+			expectedBytes:  []byte("abc\nefg\r\n123\n"),
+			expectedAtLine: 4,
+		},
+		{
+			name:           "error - lines counted",
+			input:          &failureReader{bytesToReturn: []byte("\n\n")},
+			expectedErr:    "test failure",
+			expectedBytes:  []byte("\n\n"),
+			expectedAtLine: 3,
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			r := NewLineCountingReader(test.input)
+			b, err := ioutil.ReadAll(r)
+			if test.expectedErr != "" {
+				assert.Error(t, err)
+				assert.Equal(t, test.expectedErr, err.Error())
+			} else {
+				assert.NoError(t, err)
+			}
+			assert.Equal(t, test.expectedBytes, b)
+			assert.Equal(t, test.expectedAtLine, r.AtLine())
+		})
+	}
 }
