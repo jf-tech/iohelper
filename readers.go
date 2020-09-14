@@ -192,3 +192,35 @@ func StripBOM(reader io.Reader) (io.Reader, error) {
 		return br, nil
 	}
 }
+
+// LineCountingReader wraps an io.Reader and reports currently which line the reader is at. Note
+// the LineAt starts a 1.
+type LineCountingReader struct {
+	r    io.Reader
+	line int
+}
+
+// Read implements the `io.Reader` interface.
+func (r *LineCountingReader) Read(p []byte) (n int, err error) {
+	n, err = r.r.Read(p)
+	// We can do this byte search and count because '\n' < utf8.RuneSelf.
+	for i := 0; i < n; i++ {
+		// On Windows a line ends with "\r\n" on Linux/Unix/MacOS it ends
+		// with "\n". Either way, searching for "\n" for is good enough for
+		// line counting purpose.
+		if p[i] == '\n' {
+			r.line++
+		}
+	}
+	return n, err
+}
+
+// AtLine returns the current line number. Note it starts with 1.
+func (r *LineCountingReader) AtLine() int {
+	return r.line
+}
+
+// NewLineCountingReader creates new LineCountingReader wrapping around an input io.Reader.
+func NewLineCountingReader(r io.Reader) *LineCountingReader {
+	return &LineCountingReader{r: r, line: 1}
+}
