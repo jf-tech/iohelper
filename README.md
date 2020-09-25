@@ -1,4 +1,4 @@
-Deprecated - Kept for existing project references but for new usage please use `github.com/jf-tech/go-corelib/ios` package.
+Deprecated - Kept for existing project references but for new usage please use [`github.com/jf-tech/go-corelib/ios`](https://github.com/jf-tech/go-corelib) package.
 
 # iohelper
 
