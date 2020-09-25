@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/jf-tech/strs"
+	"github.com/jf-tech/go-corelib/strs"
 )
 
 func TestNewScannerByDelim(t *testing.T) {
