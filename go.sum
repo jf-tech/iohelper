@@ -8,10 +8,6 @@ github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSs
 github.com/hashicorp/golang-lru v0.5.4/go.mod h1:iADmTwqILo4mZ8BN3D2Q6+9jd8WM5uGBxy+E8yxSoD4=
 github.com/jf-tech/go-corelib v0.0.1 h1:U7/V7QnnhzXBFCGAPVPuSiQi1nCO380Gw2SxJVffU3o=
 github.com/jf-tech/go-corelib v0.0.1/go.mod h1:+sIxnA2kmfH2extpn0QQb2Ow72HPfO1m3efu2+6Kqa4=
-github.com/jf-tech/jsons v0.0.1 h1:SBMImpiPKQMguGFHfOMlFqYXMWUBKDz4WdOf+MaA2DE=
-github.com/jf-tech/jsons v0.0.1/go.mod h1:gzUBay9a+VOItMOzIhQ8IVR+cZgdA5EAOmnKgXrc/rg=
-github.com/jf-tech/strs v0.0.1 h1:WJVAb+uQUIzYl5GCRIJeRJyoW0WA2LqM2uE6W78e+zY=
-github.com/jf-tech/strs v0.0.1/go.mod h1:iwn1LPMlK/MJ8L8d5vxFWgr0LLR1sSewdFnQRq2BQxg=
 github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
 github.com/kr/text v0.1.0 h1:45sCR5RtlFHMR4UwH9sdQ5TC8v0qDQCHnXt+kaKSTVE=
 github.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=
