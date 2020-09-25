@@ -3,6 +3,8 @@ package iohelper
 import (
 	"bufio"
 	"io"
+
+	"github.com/jf-tech/strs"
 )
 
 // ScannerByDelimFlag is the type of flags passed to NewScannerByDelim/NewScannerByDelim2.
@@ -50,7 +52,7 @@ func NewScannerByDelim2(r io.Reader, delim string, escape *rune, flags ScannerBy
 			if atEof && len(data) == 0 {
 				return 0, nil, nil
 			}
-			if index := IndexWithEsc(string(data), delim, escape); index >= 0 {
+			if index := strs.IndexWithEsc(string(data), delim, escape); index >= 0 {
 				return index + len(delim), data[:index+includeDelimLenInToken], nil
 			}
 			if atEof && eofAsDelim {
