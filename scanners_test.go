@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/jf-tech/strs"
 )
 
 func TestNewScannerByDelim(t *testing.T) {
@@ -83,7 +85,7 @@ func TestNewScannerByDelim2(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			s := NewScannerByDelim2(test.input, test.delim, RunePtr(test.esc), test.flags)
+			s := NewScannerByDelim2(test.input, test.delim, strs.RunePtr(test.esc), test.flags)
 			tokens := []string{}
 			for s.Scan() {
 				tokens = append(tokens, s.Text())
